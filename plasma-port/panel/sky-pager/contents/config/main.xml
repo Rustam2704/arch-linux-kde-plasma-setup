@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kcfg xmlns="http://www.kde.org/standards/kcfg/1.0"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://www.kde.org/standards/kcfg/1.0 http://www.kde.org/standards/kcfg/1.0/kcfg.xsd">
+  <kcfgfile name=""/>
+  <group name="General">
+    <entry name="scale" type="Int">
+      <label>Size of the digits and the fire, percent of the whitebook sheets (which were cut for 144 dpi).</label>
+      <default>60</default>
+    </entry>
+    <entry name="showPentagrams" type="Bool">
+      <label>Spinning pentagrams on both sides of the active digit.</label>
+      <default>true</default>
+    </entry>
+    <entry name="cellWidth" type="Int">
+      <label>Width of one digit cell in pixels (before scaling), incl. the gap.</label>
+      <default>44</default>
+    </entry>
+  </group>
+</kcfg>

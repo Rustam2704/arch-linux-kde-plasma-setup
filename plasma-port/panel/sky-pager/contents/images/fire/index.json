@@ -1,0 +1,551 @@
+{
+ "font": "Diablo 18",
+ "dpi": 144.0,
+ "frames": 15,
+ "sheets": {
+  "flame1-digit1.png": {
+   "flame": 1,
+   "digit": 1,
+   "width": 32,
+   "height": 54,
+   "above": 28,
+   "hole_x": 10,
+   "digit_width": 8,
+   "digit_height": 23
+  },
+  "flame1-digit2.png": {
+   "flame": 1,
+   "digit": 2,
+   "width": 44,
+   "height": 64,
+   "above": 38,
+   "hole_x": 11,
+   "digit_width": 17,
+   "digit_height": 23
+  },
+  "flame1-digit3.png": {
+   "flame": 1,
+   "digit": 3,
+   "width": 43,
+   "height": 65,
+   "above": 37,
+   "hole_x": 11,
+   "digit_width": 16,
+   "digit_height": 25
+  },
+  "flame1-digit4.png": {
+   "flame": 1,
+   "digit": 4,
+   "width": 44,
+   "height": 62,
+   "above": 38,
+   "hole_x": 11,
+   "digit_width": 17,
+   "digit_height": 21
+  },
+  "flame1-digit5.png": {
+   "flame": 1,
+   "digit": 5,
+   "width": 43,
+   "height": 65,
+   "above": 37,
+   "hole_x": 11,
+   "digit_width": 16,
+   "digit_height": 25
+  },
+  "flame1-digit6.png": {
+   "flame": 1,
+   "digit": 6,
+   "width": 43,
+   "height": 65,
+   "above": 37,
+   "hole_x": 11,
+   "digit_width": 16,
+   "digit_height": 25
+  },
+  "flame1-digit7.png": {
+   "flame": 1,
+   "digit": 7,
+   "width": 44,
+   "height": 64,
+   "above": 38,
+   "hole_x": 11,
+   "digit_width": 17,
+   "digit_height": 23
+  },
+  "flame1-digit8.png": {
+   "flame": 1,
+   "digit": 8,
+   "width": 40,
+   "height": 63,
+   "above": 35,
+   "hole_x": 11,
+   "digit_width": 14,
+   "digit_height": 25
+  },
+  "flame1-digit9.png": {
+   "flame": 1,
+   "digit": 9,
+   "width": 44,
+   "height": 64,
+   "above": 38,
+   "hole_x": 11,
+   "digit_width": 17,
+   "digit_height": 23
+  },
+  "flame2-digit1.png": {
+   "flame": 2,
+   "digit": 1,
+   "width": 50,
+   "height": 91,
+   "above": 65,
+   "hole_x": 24,
+   "digit_width": 8,
+   "digit_height": 23
+  },
+  "flame2-digit2.png": {
+   "flame": 2,
+   "digit": 2,
+   "width": 52,
+   "height": 92,
+   "above": 66,
+   "hole_x": 21,
+   "digit_width": 17,
+   "digit_height": 23
+  },
+  "flame2-digit3.png": {
+   "flame": 2,
+   "digit": 3,
+   "width": 52,
+   "height": 94,
+   "above": 66,
+   "hole_x": 21,
+   "digit_width": 16,
+   "digit_height": 25
+  },
+  "flame2-digit4.png": {
+   "flame": 2,
+   "digit": 4,
+   "width": 52,
+   "height": 90,
+   "above": 66,
+   "hole_x": 21,
+   "digit_width": 17,
+   "digit_height": 21
+  },
+  "flame2-digit5.png": {
+   "flame": 2,
+   "digit": 5,
+   "width": 52,
+   "height": 94,
+   "above": 66,
+   "hole_x": 21,
+   "digit_width": 16,
+   "digit_height": 25
+  },
+  "flame2-digit6.png": {
+   "flame": 2,
+   "digit": 6,
+   "width": 52,
+   "height": 94,
+   "above": 66,
+   "hole_x": 21,
+   "digit_width": 16,
+   "digit_height": 25
+  },
+  "flame2-digit7.png": {
+   "flame": 2,
+   "digit": 7,
+   "width": 52,
+   "height": 92,
+   "above": 66,
+   "hole_x": 21,
+   "digit_width": 17,
+   "digit_height": 23
+  },
+  "flame2-digit8.png": {
+   "flame": 2,
+   "digit": 8,
+   "width": 52,
+   "height": 94,
+   "above": 66,
+   "hole_x": 22,
+   "digit_width": 14,
+   "digit_height": 25
+  },
+  "flame2-digit9.png": {
+   "flame": 2,
+   "digit": 9,
+   "width": 52,
+   "height": 92,
+   "above": 66,
+   "hole_x": 21,
+   "digit_width": 17,
+   "digit_height": 23
+  },
+  "flame3-digit1.png": {
+   "flame": 3,
+   "digit": 1,
+   "width": 34,
+   "height": 66,
+   "above": 40,
+   "hole_x": 12,
+   "digit_width": 8,
+   "digit_height": 23
+  },
+  "flame3-digit2.png": {
+   "flame": 3,
+   "digit": 2,
+   "width": 46,
+   "height": 81,
+   "above": 55,
+   "hole_x": 13,
+   "digit_width": 17,
+   "digit_height": 23
+  },
+  "flame3-digit3.png": {
+   "flame": 3,
+   "digit": 3,
+   "width": 45,
+   "height": 81,
+   "above": 53,
+   "hole_x": 13,
+   "digit_width": 16,
+   "digit_height": 25
+  },
+  "flame3-digit4.png": {
+   "flame": 3,
+   "digit": 4,
+   "width": 46,
+   "height": 79,
+   "above": 55,
+   "hole_x": 13,
+   "digit_width": 17,
+   "digit_height": 21
+  },
+  "flame3-digit5.png": {
+   "flame": 3,
+   "digit": 5,
+   "width": 45,
+   "height": 81,
+   "above": 53,
+   "hole_x": 13,
+   "digit_width": 16,
+   "digit_height": 25
+  },
+  "flame3-digit6.png": {
+   "flame": 3,
+   "digit": 6,
+   "width": 45,
+   "height": 81,
+   "above": 53,
+   "hole_x": 13,
+   "digit_width": 16,
+   "digit_height": 25
+  },
+  "flame3-digit7.png": {
+   "flame": 3,
+   "digit": 7,
+   "width": 46,
+   "height": 81,
+   "above": 55,
+   "hole_x": 13,
+   "digit_width": 17,
+   "digit_height": 23
+  },
+  "flame3-digit8.png": {
+   "flame": 3,
+   "digit": 8,
+   "width": 42,
+   "height": 78,
+   "above": 50,
+   "hole_x": 13,
+   "digit_width": 14,
+   "digit_height": 25
+  },
+  "flame3-digit9.png": {
+   "flame": 3,
+   "digit": 9,
+   "width": 46,
+   "height": 81,
+   "above": 55,
+   "hole_x": 13,
+   "digit_width": 17,
+   "digit_height": 23
+  },
+  "flame4-digit1.png": {
+   "flame": 4,
+   "digit": 1,
+   "width": 36,
+   "height": 70,
+   "above": 44,
+   "hole_x": 19,
+   "digit_width": 8,
+   "digit_height": 23
+  },
+  "flame4-digit2.png": {
+   "flame": 4,
+   "digit": 2,
+   "width": 49,
+   "height": 86,
+   "above": 60,
+   "hole_x": 23,
+   "digit_width": 17,
+   "digit_height": 23
+  },
+  "flame4-digit3.png": {
+   "flame": 4,
+   "digit": 3,
+   "width": 48,
+   "height": 86,
+   "above": 58,
+   "hole_x": 22,
+   "digit_width": 16,
+   "digit_height": 25
+  },
+  "flame4-digit4.png": {
+   "flame": 4,
+   "digit": 4,
+   "width": 49,
+   "height": 84,
+   "above": 60,
+   "hole_x": 23,
+   "digit_width": 17,
+   "digit_height": 21
+  },
+  "flame4-digit5.png": {
+   "flame": 4,
+   "digit": 5,
+   "width": 48,
+   "height": 86,
+   "above": 58,
+   "hole_x": 22,
+   "digit_width": 16,
+   "digit_height": 25
+  },
+  "flame4-digit6.png": {
+   "flame": 4,
+   "digit": 6,
+   "width": 48,
+   "height": 86,
+   "above": 58,
+   "hole_x": 22,
+   "digit_width": 16,
+   "digit_height": 25
+  },
+  "flame4-digit7.png": {
+   "flame": 4,
+   "digit": 7,
+   "width": 49,
+   "height": 86,
+   "above": 60,
+   "hole_x": 23,
+   "digit_width": 17,
+   "digit_height": 23
+  },
+  "flame4-digit8.png": {
+   "flame": 4,
+   "digit": 8,
+   "width": 45,
+   "height": 82,
+   "above": 54,
+   "hole_x": 21,
+   "digit_width": 14,
+   "digit_height": 25
+  },
+  "flame4-digit9.png": {
+   "flame": 4,
+   "digit": 9,
+   "width": 49,
+   "height": 86,
+   "above": 60,
+   "hole_x": 23,
+   "digit_width": 17,
+   "digit_height": 23
+  },
+  "flame5-digit1.png": {
+   "flame": 5,
+   "digit": 1,
+   "width": 39,
+   "height": 73,
+   "above": 47,
+   "hole_x": 13,
+   "digit_width": 8,
+   "digit_height": 23
+  },
+  "flame5-digit2.png": {
+   "flame": 5,
+   "digit": 2,
+   "width": 54,
+   "height": 90,
+   "above": 64,
+   "hole_x": 15,
+   "digit_width": 17,
+   "digit_height": 23
+  },
+  "flame5-digit3.png": {
+   "flame": 5,
+   "digit": 3,
+   "width": 52,
+   "height": 90,
+   "above": 62,
+   "hole_x": 14,
+   "digit_width": 16,
+   "digit_height": 25
+  },
+  "flame5-digit4.png": {
+   "flame": 5,
+   "digit": 4,
+   "width": 54,
+   "height": 88,
+   "above": 64,
+   "hole_x": 15,
+   "digit_width": 17,
+   "digit_height": 21
+  },
+  "flame5-digit5.png": {
+   "flame": 5,
+   "digit": 5,
+   "width": 52,
+   "height": 90,
+   "above": 62,
+   "hole_x": 14,
+   "digit_width": 16,
+   "digit_height": 25
+  },
+  "flame5-digit6.png": {
+   "flame": 5,
+   "digit": 6,
+   "width": 52,
+   "height": 90,
+   "above": 62,
+   "hole_x": 14,
+   "digit_width": 16,
+   "digit_height": 25
+  },
+  "flame5-digit7.png": {
+   "flame": 5,
+   "digit": 7,
+   "width": 54,
+   "height": 90,
+   "above": 64,
+   "hole_x": 15,
+   "digit_width": 17,
+   "digit_height": 23
+  },
+  "flame5-digit8.png": {
+   "flame": 5,
+   "digit": 8,
+   "width": 49,
+   "height": 87,
+   "above": 59,
+   "hole_x": 14,
+   "digit_width": 14,
+   "digit_height": 25
+  },
+  "flame5-digit9.png": {
+   "flame": 5,
+   "digit": 9,
+   "width": 54,
+   "height": 90,
+   "above": 64,
+   "hole_x": 15,
+   "digit_width": 17,
+   "digit_height": 23
+  },
+  "flame6-digit1.png": {
+   "flame": 6,
+   "digit": 1,
+   "width": 34,
+   "height": 55,
+   "above": 29,
+   "hole_x": 18,
+   "digit_width": 8,
+   "digit_height": 23
+  },
+  "flame6-digit2.png": {
+   "flame": 6,
+   "digit": 2,
+   "width": 46,
+   "height": 66,
+   "above": 40,
+   "hole_x": 21,
+   "digit_width": 17,
+   "digit_height": 23
+  },
+  "flame6-digit3.png": {
+   "flame": 6,
+   "digit": 3,
+   "width": 45,
+   "height": 67,
+   "above": 39,
+   "hole_x": 21,
+   "digit_width": 16,
+   "digit_height": 25
+  },
+  "flame6-digit4.png": {
+   "flame": 6,
+   "digit": 4,
+   "width": 46,
+   "height": 64,
+   "above": 40,
+   "hole_x": 21,
+   "digit_width": 17,
+   "digit_height": 21
+  },
+  "flame6-digit5.png": {
+   "flame": 6,
+   "digit": 5,
+   "width": 45,
+   "height": 67,
+   "above": 39,
+   "hole_x": 21,
+   "digit_width": 16,
+   "digit_height": 25
+  },
+  "flame6-digit6.png": {
+   "flame": 6,
+   "digit": 6,
+   "width": 45,
+   "height": 67,
+   "above": 39,
+   "hole_x": 21,
+   "digit_width": 16,
+   "digit_height": 25
+  },
+  "flame6-digit7.png": {
+   "flame": 6,
+   "digit": 7,
+   "width": 46,
+   "height": 66,
+   "above": 40,
+   "hole_x": 21,
+   "digit_width": 17,
+   "digit_height": 23
+  },
+  "flame6-digit8.png": {
+   "flame": 6,
+   "digit": 8,
+   "width": 42,
+   "height": 65,
+   "above": 37,
+   "hole_x": 20,
+   "digit_width": 14,
+   "digit_height": 25
+  },
+  "flame6-digit9.png": {
+   "flame": 6,
+   "digit": 9,
+   "width": 46,
+   "height": 66,
+   "above": 40,
+   "hole_x": 21,
+   "digit_width": 17,
+   "digit_height": 23
+  }
+ },
+ "spin": {
+  "size": 21,
+  "frames": 8
+ }
+}

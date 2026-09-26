@@ -1,5 +1,5 @@
 // Plasma panel in the spirit of whitebook's top panel:
-// app menu · taskbar · workspace numbers · (stretch) · CPU · RAM · tray · layout · clock · power
+// app menu · taskbar · Diablo workspace strip · (stretch) · CPU · RAM · tray · layout · clock · power
 // Applied with apply-panel.sh (evaluateScript over D-Bus). Replaces every existing panel.
 var old = panels();
 for (var i = 0; i < old.length; ++i) { old[i].remove(); }
@@ -24,10 +24,12 @@ tasks.writeConfig("launchers", [
 tasks.writeConfig("showOnlyCurrentDesktop", true);
 tasks.writeConfig("middleClickAction", "NewInstance");
 
-var pager = p.addWidget("org.kde.plasma.pager");
+// whitebook's workspace strip: Diablo digits, fire + pentagrams on the active one
+// (plasmoid org.sky.pager from panel/sky-pager, installed by apply.sh)
+var pager = p.addWidget("org.sky.pager");
 pager.currentConfigGroup = ["General"];
-pager.writeConfig("displayedText", "Number");
-pager.writeConfig("wrapPage", true);
+pager.writeConfig("scale", 60);
+pager.writeConfig("showPentagrams", true);
 
 p.addWidget("org.kde.plasma.panelspacer");
 

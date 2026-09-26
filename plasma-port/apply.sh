@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 # Apply the whitebook look and helpers to KDE Plasma on the Legion 5.
 # Idempotent; every step can be skipped with an argument: ./apply.sh [colors] [fonts] [kitty]
-# [kbd] [net] [kwin] [panel]. No arguments = everything except the panel (run it last,
+# [kbd] [net] [kwin] [pager] [panel]. No arguments = everything except the panel (run it last,
 # separately, it replaces the current panel). Backups go to ~/.local/state/plasma-port/.
 set -euo pipefail
 here=$(dirname "$(readlink -f "$0")")
 bak=~/.local/state/plasma-port/$(date +%Y%m%d-%H%M%S)
 mkdir -p "$bak" ~/.local/bin ~/.local/share/fonts ~/.local/share/color-schemes \
          ~/.local/share/sky-kbd ~/.config/kitty ~/.config/systemd/user
-steps=("$@"); [[ ${#steps[@]} -eq 0 ]] && steps=(colors fonts kitty kbd net kwin)
+steps=("$@"); [[ ${#steps[@]} -eq 0 ]] && steps=(colors fonts kitty kbd net kwin pager)
 want() { for s in "${steps[@]}"; do [[ $s == "$1" ]] && return 0; done; return 1; }
 backup() { for f in "$@"; do [[ -e $f ]] && cp -a "$f" "$bak/" || true; done; }
 
@@ -65,6 +65,13 @@ fi
 if want kwin; then
     backup ~/.config/kwinrc
     bash "$here/kwin/effects.sh"
+fi
+
+if want pager; then
+    # the Diablo workspace strip (Plasma applet); -u upgrades an installed copy
+    kpackagetool6 -t Plasma/Applet -u "$here/panel/sky-pager" >/dev/null 2>&1 \
+        || kpackagetool6 -t Plasma/Applet -i "$here/panel/sky-pager"
+    echo "pager: org.sky.pager installed (appears in the panel after 'apply.sh panel' or 'Додати віджети')"
 fi
 
 if want panel; then

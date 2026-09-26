@@ -1,0 +1,15 @@
+{
+    "KPackageStructure": "Plasma/Applet",
+    "KPlugin": {
+        "Id": "org.sky.pager",
+        "Name": "Sky Pager",
+        "Description": "Virtual desktop numbers in the Diablo font; the active one burns under the Diablo logo fire with two spinning pentagrams (ported from whitebook).",
+        "Icon": "virtual-desktops",
+        "Category": "Windows and Tasks",
+        "Authors": [{"Name": "whitebook"}],
+        "Version": "1.0",
+        "License": "MIT"
+    },
+    "X-Plasma-API-Minimum-Version": "6.0",
+    "X-Plasma-Provides": ["org.kde.plasma.virtualdesktops"]
+}

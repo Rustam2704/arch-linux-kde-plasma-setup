@@ -12,6 +12,7 @@ KWin не переносятся. Всё написано без проверк�
 | `colors/Sky.colors` | цветовая схема Plasma: фон `#000000`, поверхности `#12171a`, текст `#dfe8ee`, акцент `#0d8ecb`, свет `#48daf9` | `~/.local/share/color-schemes/` |
 | `fonts/Diablo.ttf` | шрифт панели whitebook; DSEG7 (часы), Inter, JetBrainsMono — пакетами | `~/.local/share/fonts/` |
 | `panel/sky-panel.js` | панель сверху 44 px: меню · панель задач · номера столов · растяжка · CPU · RAM · трей · раскладка · часы DSEG7 · выключение; чёрный фон | применяется скриптом `apply-panel.sh` |
+| `panel/sky-pager/` | свой виджет-пейджер: цифры столов шрифтом Diablo, активная чёрная под огнём логотипа Diablo с двумя вращающимися пентаграммами (те же кадры, что на whitebook), занятые столы светлее, клик переключает, колесо листает | `kpackagetool6 -t Plasma/Applet -i` (делает `apply.sh`), id `org.sky.pager` |
 | `kbd/sky-kbd` | переключатель раскладок как на whitebook: Alt+Shift EN⇄RU, Ctrl+Shift UA по отпусканию (evdev), переключение и OSD через D-Bus самой Plasma, звуки Enter/стрелок из Diablo | `~/.local/bin/`, служба `sky-kbd.service` |
 | `net/netqd`, `net/panel-ping` | пинг роутера и 1.1.1.1, «сейчас · медиана» для виджета панели | `~/.local/bin/`, служба `netqd.service` |
 | `kitty/` | kitty с цветами темы, Ctrl+C/V в любой раскладке, Ctrl+клик по пути (kate/dolphin) | `~/.config/kitty/`, `~/.local/bin/open-path` |
@@ -39,29 +40,34 @@ bash gaming/install-gaming.sh
 
 ## Что проверить после применения (и где может разойтись)
 
-1. **Панель**: если после `apply-panel.sh` панель пустая или стандартная — имена виджетов
+1. **Пейджер `org.sky.pager`**: если виджет не появился — `kpackagetool6 -t Plasma/Applet -l | grep sky`
+   и `plasmoidviewer -a org.sky.pager` (пакет `plasma-sdk`) покажут ошибку QML. Что может разойтись:
+   имена свойств `TaskManager.VirtualDesktopInfo` (`desktopIds`, `currentDesktop`, `requestActivate`)
+   и `TasksModel.virtualDesktop`; размер и смещение огня подбираются настройками виджета
+   (Size %, Cell width). Перетаскивание окна на цифру не реализовано.
+2. **Панель**: если после `apply-panel.sh` панель пустая или стандартная — имена виджетов
    `org.kde.plasma.systemmonitor.cpucore` / `.memory` и их ключи `Sensors` могли измениться в
    6.7; заменить на добавление виджетов «Монітор системи» вручную и удалить эти блоки из
    `sky-panel.js`. Ключи `lock_logout` (`show_*`) и часов (`showDate`, `fontFamily`) — проверить в
    `~/.config/plasma-org.kde.plasma.desktop-appletsrc`, лишние просто игнорируются.
    Откат: `plasmashell --replace` после возврата бэкапа `appletsrc.bak-*`.
-2. **sky-kbd**: `systemctl --user status sky-kbd`; пользователь должен быть в группе `input`
+3. **sky-kbd**: `systemctl --user status sky-kbd`; пользователь должен быть в группе `input`
    (`groups`), после `usermod` нужен повторный вход. В «Параметри системи → Клавіатура» не должно
    быть сочетания переключения (скрипт убирает `grp:alt_shift_toggle` из `kxkbrc`; если Plasma
    вернула — снять в настройках). Переключение идёт через `org.kde.keyboard /Layouts`, OSD — штатный
    Plasma (`/org/kde/osdService showText`); если OSD не показывается, проверить
    `qdbus6 org.kde.plasmashell /org/kde/osdService showText input-keyboard UA`.
-3. **Цвета**: если у окон GTK остался светлый вид — «Параметри системи → Кольори та теми →
+4. **Цвета**: если у окон GTK остался светлый вид — «Параметри системи → Кольори та теми →
    Стиль програм → Налаштувати стиль GNOME/GTK» → Breeze; цветовая схема Sky применяется к Qt.
-4. **Звуки клавиш**: `libpulse-simple` через PipeWire-Pulse; выключить — `mkdir -p ~/.config/sky-kbd && touch ~/.config/sky-kbd/nosound`.
-5. **kitty**: Ctrl+клик открывает пути через `~/.local/bin/open-path` (kate для файлов, dolphin
+5. **Звуки клавиш**: `libpulse-simple` через PipeWire-Pulse; выключить — `mkdir -p ~/.config/sky-kbd && touch ~/.config/sky-kbd/nosound`.
+6. **kitty**: Ctrl+клик открывает пути через `~/.local/bin/open-path` (kate для файлов, dolphin
    для папок); если нужен другой редактор — одна строка в `open-path`.
-6. **Жесты**: на Wayland штатные в KWin — 3 пальца влево/вправо переключают столы, вверх — обзор,
+7. **Жесты**: на Wayland штатные в KWin — 3 пальца влево/вправо переключают столы, вверх — обзор,
    вниз — сетка столов; настраивать нечего, touchegg не нужен.
 
 ## Чего здесь намеренно нет
 
 Правила окон KWin (Telegram вне панели задач, Zoom, привязка программ к столам), рабочие
-области отдельно на каждом экране, огонь и пентаграммы на панели, режим passthrough, лимиты
+области отдельно на каждом экране, режим passthrough, лимиты
 памяти Firefox, `sky-stars` (можно перенести отдельно: это X11-окно типа DESKTOP, под KWin
 работает, но ставить только если друг захочет анимированный фон).
