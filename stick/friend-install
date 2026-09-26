@@ -1,0 +1,132 @@
+#!/usr/bin/env bash
+# friend-install — Arch Linux + KDE Plasma from this stick, no passwords, boots
+# straight into the desktop.  Works fully offline (local repo on the stick) and
+# uses the online mirrors instead when the network is up (fresher packages).
+#
+# Two disks are expected: Linux takes the whole LARGER disk; the other disk is
+# left untouched for Windows.
+set -euo pipefail
+
+FRIEND=/run/archiso/bootmnt/friend
+if [[ ! -d $FRIEND ]]; then
+    # on real hardware the medium is not always left mounted: mount the stick by its label
+    mkdir -p /run/stick
+    mountpoint -q /run/stick || mount -o ro /dev/disk/by-label/ARCH_202609 /run/stick 2>/dev/null || true
+    FRIEND=/run/stick/friend
+fi
+PKGLIST="$FRIEND/packages.txt"
+LOG=/tmp/friend-install.log
+exec > >(tee -a "$LOG") 2>&1
+
+die() { printf 'ERROR: %s\n' "$*" >&2; exit 1; }
+[[ $EUID -eq 0 ]] || die "run as root"
+[[ -d /sys/firmware/efi/efivars ]] || die "not booted in UEFI mode: disable Legacy/CSM boot in the BIOS"
+[[ -f $PKGLIST ]] || die "package list not found: $PKGLIST"
+mapfile -t PACKAGES < <(grep -vE '^\s*(#|$)' "$PKGLIST")
+
+echo "== friend-install: Arch Linux + KDE Plasma =="
+echo "   log: $LOG"
+
+# ---------------------------------------------------------------- target disk
+live_src=$(findmnt -no SOURCE /run/archiso/bootmnt 2>/dev/null || true)
+live_disk=""
+[[ -n $live_src ]] && live_disk=$(lsblk -no PKNAME "$live_src" 2>/dev/null | head -1 || true)
+
+declare -a DISKS=()
+while read -r name size model tran; do
+    [[ $name == "/dev/${live_disk:-NONE}" ]] && continue
+    DISKS+=("$name")
+    printf '   %-14s %8s  %s (%s)\n' "$name" "$size" "$model" "$tran"
+done < <(lsblk -dpno NAME,SIZE,MODEL,TRAN -e 7,11 -b | awk '{ s=$2; u="B"; if (s>=1e12) {s=s/1e12; u="TB"} else if (s>=1e9) {s=s/1e9; u="GB"}; printf "%s %.0f%s", $1, s, u; for (i=3;i<=NF;i++) printf " %s", $i; printf "\n" }')
+[[ ${#DISKS[@]} -gt 0 ]] || die "no target disk found"
+
+largest=$(lsblk -dpno NAME,SIZE -b -e 7,11 | grep -v "^/dev/${live_disk:-NONE} " | sort -k2 -n -r | awk 'NR==1{print $1}')
+read -rp "Install Linux to (the whole disk is erased) [$largest]: " DISK
+DISK=${DISK:-$largest}
+[[ -b $DISK ]] || die "$DISK is not a block device"
+read -rp "Username [legion]: " USERNAME;  USERNAME=${USERNAME:-legion}
+read -rp "Hostname [legion]: " HOSTNAME_; HOSTNAME_=${HOSTNAME_:-legion}
+[[ $USERNAME =~ ^[a-z_][a-z0-9_-]*$ ]] || die "username must be lowercase letters, digits, - or _"
+echo
+echo "   disk:     $DISK   (everything on it will be erased; other disks are not touched)"
+echo "   user:     $USERNAME  (no password; sudo without password)"
+echo "   hostname: $HOSTNAME_"
+read -rp "Type YES to continue: " ok
+[[ $ok == YES ]] || die "aborted"
+
+# ---------------------------------------------------------------- network / repos
+online=0
+if curl -fsI --max-time 6 https://archlinux.org >/dev/null 2>&1; then online=1; fi
+echo ":: network: $([[ $online == 1 ]] && echo online — using mirrors, local repo as fallback || echo offline — using the local repo on the stick)"
+
+PACCONF=/tmp/friend-pacman.conf
+if [[ $online == 1 ]]; then
+    cp /etc/pacman.conf "$PACCONF"
+else
+    cat > "$PACCONF" <<CONF
+[options]
+HoldPkg = pacman glibc
+Architecture = auto
+SigLevel = Required DatabaseOptional
+LocalFileSigLevel = Optional
+CONF
+fi
+cat >> "$PACCONF" <<CONF
+
+[friend]
+SigLevel = Optional
+Server = file://$FRIEND/repo
+CONF
+
+# The live keyring: pacman-init.service only runs after NTP time sync, so on an
+# offline machine it never runs.  Initialise and populate the keyring ourselves.
+if ! pacman-key --list-keys 2>/dev/null | grep -q '^pub'; then
+    echo ":: initialising the live pacman keyring"
+    pacman-key --init >/dev/null 2>&1
+    pacman-key --populate >/dev/null 2>&1
+fi
+pacman-key --list-keys 2>/dev/null | grep -q '^pub' || die "pacman keyring is empty"
+pacman -Sy --config "$PACCONF" --noconfirm >/dev/null
+
+# ---------------------------------------------------------------- partitions
+echo ":: partitioning $DISK"
+swapoff -a 2>/dev/null || true
+umount -R /mnt 2>/dev/null || true
+wipefs -af "$DISK" >/dev/null
+sgdisk --zap-all "$DISK" >/dev/null
+sgdisk -n1:0:+1G -t1:ef00 -c1:EFI -n2:0:0 -t2:8304 -c2:ARCHROOT "$DISK" >/dev/null
+partprobe "$DISK"; udevadm settle
+P=$DISK; [[ $DISK == *nvme* || $DISK == *mmcblk* ]] && P="${DISK}p"
+mkfs.fat -F32 -n EFI "${P}1" >/dev/null
+mkfs.ext4 -qF -L ARCHROOT "${P}2"
+mount "${P}2" /mnt
+mount --mkdir "${P}1" /mnt/boot
+
+# ---------------------------------------------------------------- packages
+echo ":: installing ${#PACKAGES[@]} packages"
+pacstrap -C "$PACCONF" -K /mnt "${PACKAGES[@]}"
+genfstab -U /mnt | sed 's/\brelatime\b/noatime/' >> /mnt/etc/fstab
+
+# ---------------------------------------------------------------- payload
+echo ":: configuring"
+cp -a "$FRIEND/payload/system/." /mnt/
+# files come off a read-only ISO with the write bits stripped: give them back
+(cd "$FRIEND/payload/system" && find . -mindepth 1 -printf '%P\n' | while read -r f; do chmod u+w "/mnt/$f"; done)
+mkdir -p /mnt/var/tmp/friend
+cp -a "$FRIEND/payload/boot" "$FRIEND/payload/home" "$FRIEND/codex" "$FRIEND/docs" /mnt/var/tmp/friend/
+chmod -R u+w /mnt/var/tmp/friend
+ROOT_UUID=$(blkid -s UUID -o value "${P}2")
+FRIEND_USER="$USERNAME" FRIEND_HOST="$HOSTNAME_" FRIEND_ROOT_UUID="$ROOT_UUID" \
+    arch-chroot /mnt /usr/local/bin/friend-chroot
+rm -rf /mnt/var/tmp/friend
+cp "$LOG" "/mnt/home/$USERNAME/ai/linux-setup/install.log" 2>/dev/null || true
+
+# EFI boot entry (bootctl cannot write NVRAM from inside a chroot), Linux first in the order
+while read -r num; do efibootmgr -q -b "$num" -B || true; done < <(efibootmgr | awk '/Linux Boot Manager/{print substr($1,5,4)}')
+efibootmgr -q --create --disk "$DISK" --part 1 --loader '\\EFI\\systemd\\systemd-bootx64.efi' --label "Linux Boot Manager" \
+    || echo "WARNING: could not create the EFI entry; the fallback \\EFI\\BOOT\\BOOTX64.EFI is installed"
+
+umount -R /mnt
+echo
+echo "== done.  Remove the stick and reboot: the machine boots straight into Plasma as $USERNAME."
+echo "   Next steps for Codex: ~/ai/linux-setup/NEXT-STEPS.md"

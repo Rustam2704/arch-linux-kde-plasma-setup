@@ -1,0 +1,13 @@
+[Unit]
+Description=Connection quality: latency to the router and the internet, for the panel
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/netqd
+Restart=on-failure
+RestartSec=3
+Nice=10
+
+[Install]
+WantedBy=default.target

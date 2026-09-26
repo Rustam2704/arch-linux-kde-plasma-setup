@@ -1,0 +1,4 @@
+#!/bin/sh
+# Text for the "Command Output" panel widget: ping now · median (ms), from netqd.
+# Widget settings: command `~/.local/bin/panel-ping`, interval 1000 ms, font Diablo / monospace.
+cat "${XDG_RUNTIME_DIR:-/tmp}/netq.txt" 2>/dev/null || echo "…"

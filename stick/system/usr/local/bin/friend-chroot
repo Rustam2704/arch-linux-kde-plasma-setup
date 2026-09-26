@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+# Runs inside the new system (arch-chroot) from friend-install.
+set -euo pipefail
+U=$FRIEND_USER; H=$FRIEND_HOST; UUID=$FRIEND_ROOT_UUID
+T=/var/tmp/friend
+
+ln -sf /usr/share/zoneinfo/Europe/Kyiv /etc/localtime
+hwclock --systohc || true
+sed -i 's/^#\(en_US.UTF-8\|uk_UA.UTF-8\|ru_RU.UTF-8\) UTF-8/\1 UTF-8/' /etc/locale.gen
+locale-gen >/dev/null
+echo "$H" > /etc/hostname
+printf '127.0.0.1\tlocalhost\n::1\t\tlocalhost\n127.0.1.1\t%s\n' "$H" > /etc/hosts
+
+# --- user: no password anywhere, admin without prompts
+useradd -m -G wheel,video,audio,input,storage,games -s /bin/bash "$U"
+passwd -d "$U" >/dev/null
+passwd -l root >/dev/null
+chmod 440 /etc/sudoers.d/10-wheel
+sed -i "s/@USERNAME@/$U/" /etc/sddm.conf.d/10-autologin.conf
+
+# --- pacman / makepkg like whitebook
+sed -i 's/^#Color/Color/; s/^#VerbosePkgLists/VerbosePkgLists/; s/^#ParallelDownloads.*/ParallelDownloads = 5/' /etc/pacman.conf
+sed -i '/^#\[multilib\]/,/^#Include/ s/^#//' /etc/pacman.conf
+sed -i "s/^#MAKEFLAGS=.*/MAKEFLAGS=\"-j\$(nproc)\"/" /etc/makepkg.conf
+
+# --- boot: systemd-boot, no menu, LTS kernel first
+mkinitcpio -P >/dev/null
+bootctl install >/dev/null
+cp -a "$T/boot/loader/." /boot/loader/
+sed -i "s/@ROOT_UUID@/$UUID/" /boot/loader/entries/*.conf
+
+# --- services
+systemctl enable NetworkManager bluetooth sddm power-profiles-daemon thermald switcheroo-control fstrim.timer paccache.timer >/dev/null 2>&1
+
+# --- Codex CLI (self-contained tarball: launcher + linux-x64 binary)
+npm install -g --no-audit --no-fund --offline "$T"/codex/openai-codex-*.tgz >/dev/null
+
+# --- home: Plasma defaults, Codex rules, docs
+HOME_DIR=/home/$U
+cp -a "$T/home/." "$HOME_DIR/"
+mkdir -p "$HOME_DIR/ai"
+cp -a "$T/docs/." "$HOME_DIR/ai/"
+sed -i "s/@USERNAME@/$U/g" "$HOME_DIR/.codex/AGENTS.md"
+chmod -R u+w,go-w "$HOME_DIR"
+chown -R "$U:$U" "$HOME_DIR"
+rm -f /usr/local/bin/friend-chroot

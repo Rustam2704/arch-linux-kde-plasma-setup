@@ -1,0 +1,366 @@
+#!/usr/bin/env python3
+"""sky-kbd — Windows-style keyboard layout switching + layout OSD + key sounds,
+ported from whitebook's osd-daemon for KDE Plasma on X11.
+
+    Alt+Shift    EN <-> RU   (from UA: back to EN)
+    Ctrl+Shift   UA          (pressed again on UA: back to the previous layout)
+
+The chord fires on key RELEASE and only if nothing else was pressed while the
+modifiers were held, so Ctrl+Shift+V, Alt+Shift+Tab and the like keep working.
+XRecord only observes; no key is grabbed. Plasma's own switching (grp:...
+xkb option) should be off in "Параметри системи → Клавіатура", or both will fire.
+
+Sounds: Enter -> accept.wav, arrows -> move.wav (Diablo menu sounds); disabled by
+`touch ~/.config/sky-kbd/nosound`.
+
+Run as a `systemd --user` service (sky-kbd.service). X11 only: on Wayland XRecord
+does not exist; there use an evdev reader and `qdbus6 org.kde.keyboard /Layouts
+switchToLayout N` instead (not done here).
+"""
+import ctypes
+import os
+import threading
+import time
+import wave
+
+import gi
+gi.require_version("Gtk", "3.0")
+from gi.repository import Gtk, Gdk, GLib  # noqa: E402
+
+COLOURS = {"EN": "#3b7ddd", "RU": "#8f5b2e", "UA": "#ffd447"}
+NOSOUND = os.path.expanduser("~/.config/sky-kbd/nosound")
+SOUND_DIR = os.path.expanduser("~/.local/share/sky-kbd")
+CSS = """
+#osd { background-color: #000000; border: 1px solid rgba(72, 218, 249, 0.35); border-radius: 8px; padding: 10px 26px; }
+#osd label { color: #48daf9; font-family: "Diablo", "Inter"; font-size: 48px; letter-spacing: 4px; }
+#osd.layout-en { border-color: #3b7ddd; }
+#osd.layout-ru { border-color: #8f5b2e; }
+#osd.layout-ua { border-color: #ffd447; }
+"""
+
+
+# ---------------------------------------------------------------- OSD (GTK, centre of screen)
+class Osd:
+    def __init__(self):
+        self.win = Gtk.Window(type=Gtk.WindowType.POPUP)
+        self.win.set_name("osd")
+        self.win.set_keep_above(True)
+        self.win.set_type_hint(Gdk.WindowTypeHint.NOTIFICATION)
+        screen = self.win.get_screen()
+        visual = screen.get_rgba_visual()
+        if visual:
+            self.win.set_visual(visual)
+        self.label = Gtk.Label()
+        self.win.add(self.label)
+        prov = Gtk.CssProvider()
+        prov.load_from_data(CSS.encode())
+        Gtk.StyleContext.add_provider_for_screen(screen, prov, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+        self.timer = None
+
+    def badge(self, text):
+        ctx = self.win.get_style_context()
+        for c in ("layout-en", "layout-ru", "layout-ua"):
+            ctx.remove_class(c)
+        if text in COLOURS:
+            ctx.add_class("layout-" + text.lower())
+        self.label.set_text(text)
+        self.win.show_all()
+        self.win.set_opacity(0.92)
+        w, h = self.win.get_size()
+        mon = Gdk.Display.get_default().get_primary_monitor() or Gdk.Display.get_default().get_monitor(0)
+        geo = mon.get_geometry()
+        self.win.move(geo.x + (geo.width - w) // 2, geo.y + (geo.height - h) // 2)
+        if self.timer:
+            GLib.source_remove(self.timer)
+        self.timer = GLib.timeout_add(700, self.hide)
+        return False
+
+    def hide(self):
+        self.win.hide()
+        self.timer = None
+        return False
+
+
+# ---------------------------------------------------------------- XKB group (= layout index)
+class Xkb:
+    class State(ctypes.Structure):
+        _fields_ = [("group", ctypes.c_ubyte), ("locked_group", ctypes.c_ubyte),
+                    ("base_group", ctypes.c_ushort), ("latched_group", ctypes.c_short),
+                    ("mods", ctypes.c_ubyte), ("base_mods", ctypes.c_ubyte),
+                    ("latched_mods", ctypes.c_ubyte), ("locked_mods", ctypes.c_ubyte),
+                    ("compat_state", ctypes.c_ubyte), ("grab_mods", ctypes.c_ubyte),
+                    ("compat_grab_mods", ctypes.c_ubyte), ("lookup_mods", ctypes.c_ubyte),
+                    ("compat_lookup_mods", ctypes.c_ubyte), ("ptr_buttons", ctypes.c_ushort)]
+    USE_CORE_KBD = 0x0100
+
+    def __init__(self):
+        self.x = ctypes.cdll.LoadLibrary("libX11.so.6")
+        self.x.XOpenDisplay.restype = ctypes.c_void_p
+        self.x.XkbGetState.argtypes = [ctypes.c_void_p, ctypes.c_uint, ctypes.POINTER(self.State)]
+        self.x.XkbLockGroup.argtypes = [ctypes.c_void_p, ctypes.c_uint, ctypes.c_uint]
+        self.x.XFlush.argtypes = [ctypes.c_void_p]
+        self.dpy = self.x.XOpenDisplay(None)
+        self.lock = threading.Lock()
+
+    def group(self):
+        st = self.State()
+        with self.lock:
+            self.x.XkbGetState(self.dpy, self.USE_CORE_KBD, ctypes.byref(st))
+        return st.group
+
+    def set_group(self, g):
+        with self.lock:
+            self.x.XkbLockGroup(self.dpy, self.USE_CORE_KBD, g)
+            self.x.XFlush(self.dpy)
+
+
+# ---------------------------------------------------------------- chords (verbatim from whitebook, tested there)
+class Chords:
+    def __init__(self, cats, held=lambda: None):
+        self.cats = cats
+        self.down = {}
+        self.dirty = False
+        self.held = held
+
+    def press(self, kc):
+        cat = self.cats.get(kc)
+        if cat is None:
+            self.dirty = True
+            return
+        real = self.held()
+        if real is not None:
+            for k in list(self.down):
+                if k not in real:
+                    del self.down[k]
+        if not self.down:
+            self.dirty = False
+        self.down[kc] = cat
+
+    def button(self):
+        self.dirty = True
+
+    def release(self, kc):
+        combo = None
+        if kc in self.down:
+            held = set(self.down.values())
+            if not self.dirty:
+                if held == {"alt", "shift"}:
+                    combo = "alt_shift"
+                elif held == {"ctrl", "shift"}:
+                    combo = "ctrl_shift"
+                if combo:
+                    self.dirty = True
+            del self.down[kc]
+        if not self.down:
+            self.dirty = False
+        return combo
+
+
+# ---------------------------------------------------------------- sounds (libpulse-simple, works with PipeWire)
+class Sounds:
+    def __init__(self, files):
+        self.pcm, self.rate, self.channels = {}, None, None
+        for name, path in files.items():
+            try:
+                with wave.open(path, "rb") as w:
+                    if self.rate is None:
+                        self.rate, self.channels = w.getframerate(), w.getnchannels()
+                    self.pcm[name] = w.readframes(w.getnframes())
+            except (OSError, wave.Error) as e:
+                print("sky-kbd: sound not loaded:", path, e, flush=True)
+        self.pa = None
+        self.lock = threading.Lock()
+        self.running = False
+        self.next = None
+
+    def play(self, name):
+        if name not in self.pcm or os.path.exists(NOSOUND):
+            return
+        with self.lock:
+            self.next = name
+            if not self.running:
+                self.running = True
+                threading.Thread(target=self._run, daemon=True).start()
+
+    def _lib(self):
+        if self.pa is None:
+            lib = ctypes.CDLL("libpulse-simple.so.0")
+            lib.pa_simple_new.restype = ctypes.c_void_p
+            lib.pa_simple_new.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_int, ctypes.c_char_p,
+                                          ctypes.c_char_p, ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p,
+                                          ctypes.c_void_p]
+            lib.pa_simple_write.argtypes = [ctypes.c_void_p, ctypes.c_void_p, ctypes.c_size_t, ctypes.c_void_p]
+            lib.pa_simple_drain.argtypes = [ctypes.c_void_p, ctypes.c_void_p]
+            lib.pa_simple_flush.argtypes = [ctypes.c_void_p, ctypes.c_void_p]
+            lib.pa_simple_free.argtypes = [ctypes.c_void_p]
+            self.pa = lib
+        return self.pa
+
+    def _run(self):
+        try:
+            lib = self._lib()
+
+            class Spec(ctypes.Structure):
+                _fields_ = [("format", ctypes.c_int), ("rate", ctypes.c_uint32), ("channels", ctypes.c_uint8)]
+
+            class Attr(ctypes.Structure):
+                _fields_ = [(n, ctypes.c_uint32) for n in ("maxlength", "tlength", "prebuf", "minreq", "fragsize")]
+            spec = Spec(3, self.rate, self.channels)
+            chunk = int(self.rate * self.channels * 2 * 0.04)
+            attr = Attr(0xFFFFFFFF, chunk * 2, 0, 0xFFFFFFFF, 0xFFFFFFFF)
+            err = ctypes.c_int(0)
+            stream = lib.pa_simple_new(None, b"sky-kbd", 1, None, b"key", ctypes.byref(spec), None,
+                                       ctypes.byref(attr), ctypes.byref(err))
+            if not stream:
+                return
+            pcm, pos = b"", 0
+            while True:
+                with self.lock:
+                    if self.next is not None:
+                        pcm, pos = self.pcm[self.next], 0
+                        self.next = None
+                        lib.pa_simple_flush(stream, ctypes.byref(err))
+                if pos >= len(pcm):
+                    lib.pa_simple_drain(stream, ctypes.byref(err))
+                    with self.lock:
+                        if self.next is None:
+                            self.running = False
+                            break
+                    continue
+                lib.pa_simple_write(stream, pcm[pos:pos + chunk], min(chunk, len(pcm) - pos), ctypes.byref(err))
+                pos += chunk
+            lib.pa_simple_free(stream)
+        except Exception as e:  # noqa: BLE001
+            print("sky-kbd: sound failed:", e, flush=True)
+        finally:
+            with self.lock:
+                self.running = False
+
+
+# ---------------------------------------------------------------- layouts
+def layout_names():
+    import subprocess
+    names = []
+    out = subprocess.run(["setxkbmap", "-query"], capture_output=True, text=True).stdout
+    for line in out.splitlines():
+        if line.startswith("layout:"):
+            names = [n.strip() for n in line.split(":", 1)[1].split(",")]
+    return [{"us": "EN", "gb": "EN"}.get(n, n.upper()) for n in names] or ["EN"]
+
+
+class Layouts:
+    def __init__(self, osd, sounds):
+        self.osd, self.sounds = osd, sounds
+        self.xkb = Xkb()
+        self.names = layout_names()
+        self.current = self.xkb.group()
+        self.previous = 0
+        self.changed_at = 0.0
+
+    def idx(self, name):
+        return self.names.index(name) if name in self.names else None
+
+    def switch(self, g):
+        if g is None or g == self.current:
+            return
+        if self.names[self.current] != "UA":
+            self.previous = self.current
+        self.changed_at = time.monotonic()
+        self.xkb.set_group(g)
+        self.current = g
+        GLib.idle_add(self.osd.badge, self.names[g])
+
+    def alt_shift(self):
+        en, ru = self.idx("EN"), self.idx("RU")
+        if self.names[self.current] == "EN" and ru is not None:
+            self.switch(ru)
+        else:
+            self.switch(en if en is not None else 0)
+
+    def ctrl_shift(self):
+        ua = self.idx("UA")
+        if ua is None:
+            return
+        self.switch(self.previous if self.current == ua else ua)
+
+    def watch_external(self):
+        """The panel widget or Plasma changed the layout: follow it."""
+        seen = None
+        while True:
+            time.sleep(0.3)
+            g = self.xkb.group()
+            if g == self.current or time.monotonic() - self.changed_at < 0.8:
+                seen = None
+                continue
+            if seen != g:
+                seen = g
+                continue
+            seen = None
+            if self.names[self.current] != "UA":
+                self.previous = self.current
+            self.current = g
+
+    def watch_keys(self):
+        from Xlib import X, XK, display
+        from Xlib.ext import record
+        from Xlib.protocol import rq
+
+        rec, local = display.Display(), display.Display()
+        cats = {}
+        for sym, cat in (("Shift_L", "shift"), ("Shift_R", "shift"), ("Control_L", "ctrl"),
+                         ("Control_R", "ctrl"), ("Alt_L", "alt"), ("Alt_R", "alt"),
+                         ("Meta_L", "alt"), ("Meta_R", "alt"), ("Super_L", "super"),
+                         ("Super_R", "super"), ("ISO_Level3_Shift", "altgr")):
+            for kc, _ in local.keysym_to_keycodes(XK.string_to_keysym(sym)):
+                cats[kc] = cat
+
+        def really_down():
+            keys = local.query_keymap()
+            return {kc for kc in range(256) if keys[kc >> 3] & (1 << (kc & 7))}
+        chords = Chords(cats, really_down)
+        state = {"key_up": -1000}
+        enter = {kc for sym in ("Return", "KP_Enter") for kc, _ in local.keysym_to_keycodes(XK.string_to_keysym(sym))}
+        arrows = {kc for sym in ("Left", "Right", "Up", "Down", "KP_Left", "KP_Right", "KP_Up", "KP_Down")
+                  for kc, _ in local.keysym_to_keycodes(XK.string_to_keysym(sym))}
+        keyed = enter | arrows
+
+        def handler(reply):
+            data = reply.data
+            while len(data):
+                ev, data = rq.EventField(None).parse_binary_value(data, rec.display, None, None)
+                if ev.type == X.ButtonPress:
+                    chords.button()
+                    continue
+                kc = ev.detail
+                if ev.type == X.KeyPress:
+                    if kc in keyed and ev.time - state["key_up"] > 8:
+                        self.sounds.play("accept" if kc in enter else "move")
+                    chords.press(kc)
+                elif ev.type == X.KeyRelease:
+                    if kc in keyed:
+                        state["key_up"] = ev.time
+                    combo = chords.release(kc)
+                    if combo == "alt_shift":
+                        self.alt_shift()
+                    elif combo == "ctrl_shift":
+                        self.ctrl_shift()
+
+        ctx = rec.record_create_context(0, [record.AllClients], [{
+            "core_requests": (0, 0), "core_replies": (0, 0),
+            "ext_requests": (0, 0, 0, 0), "ext_replies": (0, 0, 0, 0),
+            "delivered_events": (0, 0), "device_events": (X.KeyPress, X.ButtonPress),
+            "errors": (0, 0), "client_started": False, "client_died": False}])
+        rec.record_enable_context(ctx, handler)
+
+
+def main():
+    osd = Osd()
+    sounds = Sounds({n: os.path.join(SOUND_DIR, f"{n}.wav") for n in ("accept", "move")})
+    layouts = Layouts(osd, sounds)
+    for target in (layouts.watch_external, layouts.watch_keys):
+        threading.Thread(target=target, daemon=True).start()
+    Gtk.main()
+
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Friend first login
+Comment=One-shot Plasma setup: panel layout, theme, refresh rate. Removes itself.
+Exec=/usr/local/bin/friend-first-login
+OnlyShowIn=KDE;
+X-KDE-autostart-after=panel

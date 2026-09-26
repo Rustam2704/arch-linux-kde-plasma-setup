@@ -1,0 +1,49 @@
+[kwin]
+Window Close=Meta+Q\tAlt+F4,Alt+F4,Close Window
+Window Maximize=Meta+Up\tMeta+PgUp,Meta+PgUp,Maximize Window
+Window Minimize=Meta+Down\tMeta+PgDown,Meta+PgDown,Minimize Window
+Window Quick Tile Top=none,Meta+Up,Quick Tile Window to the Top
+Window Quick Tile Bottom=none,Meta+Down,Quick Tile Window to the Bottom
+Window Quick Tile Left=Meta+Left,Meta+Left,Quick Tile Window to the Left
+Window Quick Tile Right=Meta+Right,Meta+Right,Quick Tile Window to the Right
+Switch to Desktop 1=Meta+1,,Switch to Desktop 1
+Switch to Desktop 2=Meta+2,,Switch to Desktop 2
+Switch to Desktop 3=Meta+3,,Switch to Desktop 3
+Switch to Desktop 4=Meta+4,,Switch to Desktop 4
+Switch to Desktop 5=Meta+5,,Switch to Desktop 5
+Window to Desktop 1=Meta+Shift+1,,Window to Desktop 1
+Window to Desktop 2=Meta+Shift+2,,Window to Desktop 2
+Window to Desktop 3=Meta+Shift+3,,Window to Desktop 3
+Window to Desktop 4=Meta+Shift+4,,Window to Desktop 4
+Window to Desktop 5=Meta+Shift+5,,Window to Desktop 5
+
+[plasmashell]
+activate task manager entry 1=none,Meta+1,Activate Task Manager Entry 1
+activate task manager entry 2=none,Meta+2,Activate Task Manager Entry 2
+activate task manager entry 3=none,Meta+3,Activate Task Manager Entry 3
+activate task manager entry 4=none,Meta+4,Activate Task Manager Entry 4
+activate task manager entry 5=none,Meta+5,Activate Task Manager Entry 5
+activate task manager entry 6=none,Meta+6,Activate Task Manager Entry 6
+activate task manager entry 7=none,Meta+7,Activate Task Manager Entry 7
+activate task manager entry 8=none,Meta+8,Activate Task Manager Entry 8
+activate task manager entry 9=none,Meta+9,Activate Task Manager Entry 9
+activate task manager entry 10=none,Meta+0,Activate Task Manager Entry 10
+
+[ksmserver]
+Log Out=Meta+Shift+E\tCtrl+Alt+Del,Ctrl+Alt+Del,Log Out
+
+[services][org.kde.konsole.desktop]
+_launch=Meta+Return
+
+[services][org.kde.dolphin.desktop]
+_launch=Meta+E
+
+[services][org.kde.krunner.desktop]
+_launch=Meta+R\tAlt+Space\tAlt+F2\tSearch
+
+[services][org.kde.plasma-systemmonitor.desktop]
+_launch=Ctrl+Shift+Esc\tCtrl+Esc
+
+[services][org.kde.spectacle.desktop]
+_launch=Print
+RectangularRegionScreenShot=Meta+Shift+S

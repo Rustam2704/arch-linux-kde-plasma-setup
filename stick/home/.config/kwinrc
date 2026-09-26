@@ -1,0 +1,6 @@
+[Desktops]
+Number=5
+Rows=1
+
+[Windows]
+BorderlessMaximizedWindows=false

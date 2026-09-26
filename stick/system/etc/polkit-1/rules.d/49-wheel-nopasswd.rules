@@ -1,0 +1,7 @@
+/* Members of wheel act as administrators without a password prompt
+   (the machine has no passwords at all, like whitebook). */
+polkit.addRule(function(action, subject) {
+    if (subject.isInGroup("wheel")) {
+        return polkit.Result.YES;
+    }
+});

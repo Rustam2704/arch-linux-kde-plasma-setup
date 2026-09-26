@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+# friend-first-login — one-shot Plasma setup on the very first login:
+# Breeze Dark + sky-blue accent, the top panel (plasma-layout.js), pure black
+# desktop, highest refresh rate on every screen.  Removes its autostart entry.
+set -u
+log="$HOME/.local/state/friend-first-login.log"
+mkdir -p "$(dirname "$log")"
+exec >>"$log" 2>&1 || true
+echo "== $(date -Is)"
+
+for _ in $(seq 1 90); do
+    gdbus introspect --session --dest org.kde.plasmashell --object-path /PlasmaShell >/dev/null 2>&1 && break
+    sleep 1
+done
+sleep 4
+
+plasma-apply-lookandfeel -a org.kde.breezedark.desktop || echo "lookandfeel failed"
+plasma-apply-colorscheme BreezeDark --accent-color '#0d8ecb' || echo "colorscheme failed"
+
+gdbus call --session --dest org.kde.plasmashell --object-path /PlasmaShell \
+    --method org.kde.PlasmaShell.evaluateScript \
+    "$(cat /usr/local/share/friend/plasma-layout.js)" || echo "panel layout failed"
+
+# Highest refresh rate at the current resolution, for every enabled output.
+python3 - <<'PY' || echo "refresh rate step failed"
+import json, subprocess
+out = subprocess.run(["kscreen-doctor", "--json"], capture_output=True, text=True, timeout=20)
+data = json.loads(out.stdout)
+for o in data.get("outputs", []):
+    if not o.get("enabled"):
+        continue
+    modes = o.get("modes", [])
+    cur = next((m for m in modes if str(m["id"]) == str(o.get("currentModeId"))), None)
+    if not cur:
+        continue
+    best = max((m for m in modes if m["size"] == cur["size"]), key=lambda m: m["refreshRate"])
+    if best["id"] != cur["id"]:
+        subprocess.run(["kscreen-doctor", f"output.{o['name']}.mode.{best['id']}"], timeout=20)
+        print(f"{o['name']}: {cur['refreshRate']:.0f} -> {best['refreshRate']:.0f} Hz")
+PY
+
+rm -f "$HOME/.config/autostart/friend-first-login.desktop"
+sudo rm -rf /usr/local/share/friend /usr/local/bin/friend-first-login
+echo "done"
