@@ -1,5 +1,5 @@
 [Unit]
-Description=Windows-style keyboard layout switching, layout OSD and key sounds (X11)
+Description=Windows-style keyboard layout switching, layout OSD and key sounds (Wayland, evdev + KDE D-Bus)
 PartOf=graphical-session.target
 After=graphical-session.target
 

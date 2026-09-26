@@ -26,7 +26,7 @@ Status: built and tested in QEMU on 2026-09-25; the stick is written from `build
 4. ext4, no snapshots now; one snapshot later on request (Timeshift rsync).
 5. UI Ukrainian, layouts us/ru/ua, Alt+Shift cycles; the exact whitebook switcher
    (Alt+Shift EN⇄RU, Ctrl+Shift UA, OSD) is a Codex task with `osd-daemon` as the reference.
-6. Plasma X11 session by default (the reference tooling is X11), Wayland installed as an option.
+6. Plasma on Wayland (switched after the X11 session showed a black desktop on the hybrid GPU); X11 kept as a fallback.
 
 ## Stage A — this laptop (done)
 
@@ -44,4 +44,4 @@ Status: built and tested in QEMU on 2026-09-25; the stick is written from `build
 
 - Kernel anti-cheat games (Valorant, CoD, Fortnite, BF6) — never; that is what the Windows disk is for.
 - HDR — not relevant (SDR panel). VRR — panel is not G-Sync; nothing lost.
-- NVIDIA driver is closed; if X11 misbehaves, the Wayland session is one SDDM menu away.
+- NVIDIA driver is closed; the X11 session gave a black desktop on this hybrid GPU, Wayland works.

@@ -16,7 +16,7 @@
   модулем; `NVreg_DynamicPowerManagement=0x02` (дискретная карта засыпает без нагрузки).
 - Звук `pipewire` + `sof-firmware`, сеть `NetworkManager`, Bluetooth `bluez`, `power-profiles-daemon`,
   `thermald`, `fstrim.timer`, `paccache.timer`.
-- KDE Plasma, сессия **X11** по умолчанию (`plasmax11`), Wayland-сессия установлена и доступна.
+- KDE Plasma, сессия **Wayland** (`plasma`); X11-сессия установлена как запасная.
   SDDM автологин. Пароли: у пользователя пустой, root заблокирован, `sudo` и polkit без
   запросов, блокировка экрана и KWallet выключены.
 - Интерфейс украинский (`LANG=uk_UA.UTF-8`, `plasma-localerc`), локали en_US/uk_UA/ru_RU.
@@ -57,10 +57,8 @@
 
 ## Довести «как на whitebook»
 
-- Переключение раскладок как там: `Alt+Shift` EN⇄RU, `Ctrl+Shift` → UA, срабатывает на
-  отпускании, с OSD посреди экрана. Эталон — `~/ai/whitebook-setup/desktop/bin/osd-daemon`
-  (XRecord, класс `Chords`, тесты `tests/test_chords.py`); он для X11, поэтому сессия и оставлена
-  X11. Портировать как маленькую службу `systemctl --user` без зависимостей от i3/xfce.
+- Переключение раскладок как там: `Alt+Shift` EN⇄RU, `Ctrl+Shift` → UA на отпускании, с OSD —
+  готово в `plasma-port/kbd/sky-kbd` (evdev + D-Bus Plasma), ставится `plasma-port/apply.sh`.
 - Панель: сравнить со снимком и описанием в `ARCHITECTURE.md` («Панель Xfce»): индикаторы
   ping/CPU/RAM, погода, батарея, Telegram; в Plasma это либо виджеты из Discover (System
   Monitor Sensor, Weather), либо `plasma-applet-commandoutput` для genmon-подобных скриптов.

@@ -1,7 +1,7 @@
 # Global rules for Codex on this machine
 
 This is a Lenovo Legion 5 15IMH05H (i5-10300H, Intel UHD 630 + NVIDIA GTX 1660 Ti, 32 GB RAM,
-1920x1080 @ 120 Hz) running Arch Linux with KDE Plasma (X11 session by default). It was installed
+1920x1080 @ 120 Hz) running Arch Linux with KDE Plasma on Wayland (an X11 session is installed as a fallback). It was installed
 from a stick prepared on "whitebook" and follows whitebook's philosophy. Read before changing anything:
 
 - `~/ai/linux-setup/NEXT-STEPS.md` — what is already done, what to do next, the gaming stack.

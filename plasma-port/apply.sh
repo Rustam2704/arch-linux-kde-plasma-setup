@@ -39,11 +39,12 @@ if want kitty; then
 fi
 
 if want kbd; then
-    sudo pacman -S --needed --noconfirm python-xlib python-gobject gtk3 libpulse xorg-setxkbmap
+    sudo pacman -S --needed --noconfirm python-evdev python-gobject libpulse
+    sudo usermod -aG input "$USER"   # evdev needs it; takes effect after re-login
     install -m 755 "$here/kbd/sky-kbd" ~/.local/bin/sky-kbd
     cp "$here/kbd/sounds/"*.wav ~/.local/share/sky-kbd/
     cp "$here/systemd/sky-kbd.service" ~/.config/systemd/user/
-    # Plasma's own xkb toggle must go, or Alt+Shift switches twice
+    # Plasma's own xkb toggle must go, or Alt+Shift switches twice (sky-kbd switches via org.kde.keyboard)
     backup ~/.config/kxkbrc
     kwriteconfig6 --file kxkbrc --group Layout --key Options "grp_led:scroll"
     kwriteconfig6 --file kxkbrc --group Layout --key ResetOldOptions true

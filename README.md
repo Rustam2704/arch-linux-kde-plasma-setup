@@ -1,7 +1,7 @@
 # arch-linux-kde-plasma-setup
 
 Arch Linux + KDE Plasma на Lenovo Legion 5 15IMH05H (i5-10300H, Intel UHD 630 + GTX 1660 Ti,
-32 ГБ, 1080p 120 Гц), настроенный в духе whitebook: без паролей, загрузка сразу в рабочий стол,
+32 ГБ, 1080p 120 Гц, Plasma на Wayland), настроенный в духе whitebook: без паролей, загрузка сразу в рабочий стол,
 чёрная тема с акцентом `#0d8ecb`, клавиши как в Windows, раскладки us/ru/ua.
 
 ## Для локальной нейронки (Codex) на этой машине

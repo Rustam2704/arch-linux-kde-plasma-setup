@@ -1,7 +1,7 @@
 # plasma-port — вид и удобства whitebook на KDE Plasma (Legion 5)
 
 Готовые файлы для переноса того, что описано в `../FEATURES-ON-PLASMA.md`, на ноутбук с
-Arch + Plasma 6 (X11-сессия). Окна остаются обычными плавающими окнами Plasma; правила окон
+Arch + Plasma 6 (сессия Wayland). Окна остаются обычными плавающими окнами Plasma; правила окон
 KWin не переносятся. Всё написано без проверки на живой Plasma: где что-то не сойдётся, чинит
 локальная нейронка, ниже написано, что именно может разойтись.
 
@@ -12,13 +12,12 @@ KWin не переносятся. Всё написано без проверк�
 | `colors/Sky.colors` | цветовая схема Plasma: фон `#000000`, поверхности `#12171a`, текст `#dfe8ee`, акцент `#0d8ecb`, свет `#48daf9` | `~/.local/share/color-schemes/` |
 | `fonts/Diablo.ttf` | шрифт панели whitebook; DSEG7 (часы), Inter, JetBrainsMono — пакетами | `~/.local/share/fonts/` |
 | `panel/sky-panel.js` | панель сверху 44 px: меню · панель задач · номера столов · растяжка · CPU · RAM · трей · раскладка · часы DSEG7 · выключение; чёрный фон | применяется скриптом `apply-panel.sh` |
-| `kbd/sky-kbd` | переключатель раскладок как на whitebook: Alt+Shift EN⇄RU, Ctrl+Shift UA по отпусканию, OSD по центру, звуки Enter/стрелок из Diablo | `~/.local/bin/`, служба `sky-kbd.service` |
+| `kbd/sky-kbd` | переключатель раскладок как на whitebook: Alt+Shift EN⇄RU, Ctrl+Shift UA по отпусканию (evdev), переключение и OSD через D-Bus самой Plasma, звуки Enter/стрелок из Diablo | `~/.local/bin/`, служба `sky-kbd.service` |
 | `net/netqd`, `net/panel-ping` | пинг роутера и 1.1.1.1, «сейчас · медиана» для виджета панели | `~/.local/bin/`, служба `netqd.service` |
 | `kitty/` | kitty с цветами темы, Ctrl+C/V в любой раскладке, Ctrl+клик по пути (kate/dolphin) | `~/.config/kitty/`, `~/.local/bin/open-path` |
 | `kwin/effects.sh` | тени и затухание без размытия, 5 столов, тонкие рамки, кнопки окна как в Windows | `kwriteconfig6` → `kwinrc` |
-| `touchegg/touchegg.conf` | жесты: 3 пальца столы/обзор/меню, 4 пальца развернуть/свернуть | `~/.config/touchegg/` (пакет `touchegg` из AUR) |
 | `gaming/install-gaming.sh` | Steam, lib32-драйверы, gamemode, MangoHud, Lutris, Wine, Discord, OBS, Godot, Unity Hub, VS Code, Heroic, ProtonUp-Qt | отдельный шаг |
-| `apply.sh` | ставит всё выше (кроме панели и touchegg) с бэкапами в `~/.local/state/plasma-port/` | — |
+| `apply.sh` | ставит всё выше (кроме панели) с бэкапами в `~/.local/state/plasma-port/` | — |
 
 ## Порядок
 
@@ -46,18 +45,19 @@ bash gaming/install-gaming.sh
    `sky-panel.js`. Ключи `lock_logout` (`show_*`) и часов (`showDate`, `fontFamily`) — проверить в
    `~/.config/plasma-org.kde.plasma.desktop-appletsrc`, лишние просто игнорируются.
    Откат: `plasmashell --replace` после возврата бэкапа `appletsrc.bak-*`.
-2. **sky-kbd**: `systemctl --user status sky-kbd`; в «Параметри системи → Клавіатура» должно быть
-   без сочетания переключения (скрипт убирает `grp:alt_shift_toggle` из `kxkbrc`; если Plasma
-   вернула — снять в настройках). Индикатор раскладки в трее следит за группой XKB сам.
-   На Wayland не работает (XRecord) — оставаться на X11 или переписать на evdev + D-Bus
-   `org.kde.keyboard /Layouts switchToLayout`.
+2. **sky-kbd**: `systemctl --user status sky-kbd`; пользователь должен быть в группе `input`
+   (`groups`), после `usermod` нужен повторный вход. В «Параметри системи → Клавіатура» не должно
+   быть сочетания переключения (скрипт убирает `grp:alt_shift_toggle` из `kxkbrc`; если Plasma
+   вернула — снять в настройках). Переключение идёт через `org.kde.keyboard /Layouts`, OSD — штатный
+   Plasma (`/org/kde/osdService showText`); если OSD не показывается, проверить
+   `qdbus6 org.kde.plasmashell /org/kde/osdService showText input-keyboard UA`.
 3. **Цвета**: если у окон GTK остался светлый вид — «Параметри системи → Кольори та теми →
    Стиль програм → Налаштувати стиль GNOME/GTK» → Breeze; цветовая схема Sky применяется к Qt.
 4. **Звуки клавиш**: `libpulse-simple` через PipeWire-Pulse; выключить — `mkdir -p ~/.config/sky-kbd && touch ~/.config/sky-kbd/nosound`.
 5. **kitty**: Ctrl+клик открывает пути через `~/.local/bin/open-path` (kate для файлов, dolphin
    для папок); если нужен другой редактор — одна строка в `open-path`.
-6. **touchegg**: X11 только; `yay -S touchegg && sudo systemctl enable --now touchegg`,
-   конфиг в `~/.config/touchegg/touchegg.conf`, клиент стартует из `/etc/xdg/autostart`.
+6. **Жесты**: на Wayland штатные в KWin — 3 пальца влево/вправо переключают столы, вверх — обзор,
+   вниз — сетка столов; настраивать нечего, touchegg не нужен.
 
 ## Чего здесь намеренно нет
 
